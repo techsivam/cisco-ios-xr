@@ -1,6 +1,6 @@
 import pexpect
 
-# Define the device connection (modify accordingly)
+# Define the device connection details
 device_ip = "your_device_ip"
 username = "your_username"
 password = "your_password"
@@ -15,6 +15,12 @@ child.sendline(password)
 # Expect the device prompt (modify as per your device prompt)
 child.expect("#")
 
+# Enter admin mode
+child.sendline("admin")
+
+# Wait for the admin mode prompt (modify if needed)
+child.expect("#")
+
 # Send the ONIE update command
 child.sendline("hw-module location all bootmedia onie-update reload")
 
@@ -22,12 +28,14 @@ child.sendline("hw-module location all bootmedia onie-update reload")
 child.expect(r"Reload hardware module \? \[no,yes\]")
 child.sendline("yes")
 
-# Wait for a few seconds to allow the command to execute
-child.expect("#", timeout=60)
+# Wait for command execution (increase timeout if needed)
+child.expect("#", timeout=120)
 
 # Print the output
 print(child.before.decode())
 
-# Close the connection
+# Exit admin mode
 child.sendline("exit")
+
+# Close the connection
 child.close()
