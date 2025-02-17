@@ -1,0 +1,80 @@
+
+Upgrading the Smart Array firmware using the hpilo Python library involves a different approach from just updating the iLO firmware because Smart Array updates usually require the firmware to be added to the iLO repository first, then applied. Here's how you can go about it:
+
+Step-by-Step Guide:
+Install or Ensure hpilo is Available:
+Make sure you have the hpilo library installed:
+bash
+pip install python-hpilo
+Download Firmware and Signature Files:
+Ensure you have both cp051996.exe and cp051996.compsig downloaded. These files should be accessible from your script's location or a specific directory.
+Upload Files to iLO Repository:
+The hpilo library doesn't directly support uploading Smart Components or their signature files in the example code, but you can use the iLO REST API for this purpose through HTTP methods. Here's a conceptual approach using hpilo for authentication:
+python
+import hpilo
+import requests
+
+# Assuming you have these details
+hostname = 'your-ilo-ip'
+username = 'your-username'
+password = 'your-password'
+
+# Create an iLO object to get session token
+ilo = hpilo.Ilo(hostname, username, password)
+session_token = ilo.cookie  # This might not be directly available; use HTTP auth instead
+
+# URL for iLO5 repository (example)
+url = f"https://{hostname}/redfish/v1/UpdateService/Oem/Hpe/ComponentRepository"
+
+# Headers for authentication
+headers = {'Authorization': f'X-Auth-Token {session_token}'}
+
+# Upload component and signature files
+with open('cp051996.exe', 'rb') as exe_file, open('cp051996.compsig', 'rb') as compsig_file:
+    files = {
+        'file': ('cp051996.exe', exe_file, 'application/octet-stream'),
+        'compsig': ('cp051996.compsig', compsig_file, 'application/octet-stream')
+    }
+    response = requests.post(url, headers=headers, files=files)
+
+if response.status_code == 200:
+    print("Files uploaded successfully.")
+else:
+    print(f"Failed to upload files: {response.text}")
+
+This script uses requests to handle the HTTP POST with file uploads, which is not directly supported by hpilo. You need to authenticate with iLO to get a session token or use basic auth headers.
+Create an Update Task:
+After uploading the files to the repository, you need to create an update task:
+python
+task_url = f"https://{hostname}/redfish/v1/UpdateService/Oem/Hpe/UpdateTaskQueue"
+task_data = {
+    "Name": "SmartArrayUpdate",
+    "Targets": ["/redfish/v1/Systems/1/Storage"]
+}
+response = requests.post(task_url, headers=headers, json=task_data)
+
+if response.status_code == 201:
+    print("Update task created successfully.")
+else:
+    print(f"Failed to create update task: {response.text}")
+Monitor Update Status:
+Use the hpilo library or another method to check the status of the update task. This might involve querying the task's ID from the response above and then checking its status periodically.
+
+python
+task_id = response.json()['Id']  # Assuming the response contains this information
+status_url = f"https://{hostname}/redfish/v1/UpdateService/Oem/Hpe/UpdateTaskQueue/{task_id}"
+while True:
+    status_response = requests.get(status_url, headers=headers)
+    status = status_response.json().get('TaskState')
+    if status in ['Completed', 'Failed']:
+        print(f"Task status: {status}")
+        break
+    print("Update in progress...")
+    time.sleep(30)  # Check every 30 seconds
+
+Notes:
+Security: Ensure your script runs in a secure environment since it handles credentials.
+Compatibility: Check if hpilo supports your iLO version fully for all operations. Some features might only be available through the REST API directly.
+Error Handling: Implement robust error handling for network issues, authentication errors, etc.
+
+This approach combines hpilo for authentication with direct REST API calls for file uploads and task management, as hpilo itself doesn't directly support these operations for Smart Array firmware updates.
