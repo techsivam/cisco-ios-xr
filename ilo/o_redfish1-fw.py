@@ -1,17 +1,18 @@
-from redfish.rest.v1 import RestClient, ServerDownOrUnreachableError
+from ilorest.redfish import redfish_client
+from ilorest.rest.v1 import ServerDownOrUnreachableError
 
-# Define iLO Credentials
+# iLO 5 Credentials
 ILO_HOST = "https://<ILO_IP_ADDRESS>"
 ILO_USER = "<YOUR_USERNAME>"
 ILO_PASSWORD = "<YOUR_PASSWORD>"
 
 def get_ilo_firmware_version():
     try:
-        # Initialize REST client
-        client = RestClient(base_url=ILO_HOST, username=ILO_USER, password=ILO_PASSWORD)
+        # Create Redfish Client
+        client = redfish_client(base_url=ILO_HOST, username=ILO_USER, password=ILO_PASSWORD)
         client.login()
 
-        # Get iLO Manager Info (iLO Firmware)
+        # Fetch iLO Manager Info
         response = client.get("/redfish/v1/Managers/1/")
         if response.status == 200:
             firmware_version = response.dict.get("FirmwareVersion")
