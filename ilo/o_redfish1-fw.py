@@ -1,4 +1,4 @@
-from redfish import RedfishClient
+from redfish import redfish_client
 from redfish.rest.v1 import ServerDownOrUnreachableError
 
 # iLO 5 Credentials and IP Address
@@ -9,7 +9,7 @@ ILO_PASSWORD = "<YOUR_PASSWORD>"
 def get_ilo_firmware_version():
     try:
         # Create Redfish Client
-        client = RedfishClient(base_url=ILO_HOST, username=ILO_USER, password=ILO_PASSWORD)
+        client = redfish_client(base_url=ILO_HOST, username=ILO_USER, password=ILO_PASSWORD)
         client.login()
 
         # Retrieve iLO Firmware Information
