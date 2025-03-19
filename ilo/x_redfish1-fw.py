@@ -1,4 +1,4 @@
-from redfish import RedfishClient
+from redfish.rest.v1 import RestClient
 from redfish.rest.v1 import ServerDownOrUnreachableError
 
 def get_ilo_firmware_version():
@@ -7,19 +7,19 @@ def get_ilo_firmware_version():
     ilo_username = "<your-username>"       # Replace with your iLO username
     ilo_password = "<your-password>"       # Replace with your iLO password
 
-    # Create a Redfish client object
+    # Create a REST client object
     try:
-        redfish_obj = RedfishClient(base_url=ilo_host, username=ilo_username, password=ilo_password)
+        rest_client = RestClient(base_url=ilo_host, username=ilo_username, password=ilo_password)
     except ServerDownOrUnreachableError:
         print("Unable to connect to the iLO server. Check the IP address and network connectivity.")
         return
 
     # Login to the iLO
-    redfish_obj.login(auth="session")
+    rest_client.login(auth="session")
 
     # Get the manager resource (iLO details)
     manager_uri = "/redfish/v1/Managers/1/"
-    response = redfish_obj.get(manager_uri)
+    response = rest_client.get(manager_uri)
 
     # Check if the request was successful
     if response.status == 200:
@@ -30,7 +30,7 @@ def get_ilo_firmware_version():
         print(f"Failed to retrieve data. Status code: {response.status}")
 
     # Logout from the iLO session
-    redfish_obj.logout()
+    rest_client.logout()
 
 if __name__ == "__main__":
     get_ilo_firmware_version()
