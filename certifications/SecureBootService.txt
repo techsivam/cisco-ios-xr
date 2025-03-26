@@ -1,0 +1,19 @@
+import requests
+from requests.auth import HTTPBasicAuth
+
+# Replace with your iLO credentials and IP address
+ilo_ip = "your_ilo_ip"
+ilo_username = "your_username"
+ilo_password = "your_password"
+
+# Define the Secure Boot URI
+secure_boot_uri = f"https://{ilo_ip}/redfish/v1/Systems/1/SecureBoot/"
+
+# Send the GET request
+response = requests.get(secure_boot_uri, auth=HTTPBasicAuth(ilo_username, ilo_password), verify=False)
+
+# Check the response
+if response.status_code == 200:
+    print("Secure Boot service is available.")
+else:
+    print(f"Failed to access Secure Boot service. Status code: {response.status_code}")

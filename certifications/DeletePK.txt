@@ -1,0 +1,24 @@
+import requests
+from requests.auth import HTTPBasicAuth
+
+# Replace with your iLO credentials and IP address
+ilo_ip = "your_ilo_ip"
+ilo_username = "your_username"
+ilo_password = "your_password"
+
+# Define the ResetKeys action URI
+reset_keys_uri = f"https://{ilo_ip}/redfish/v1/Systems/1/SecureBoot/Actions/SecureBoot.ResetKeys"
+
+# Define the payload to delete only the Platform Key
+payload = {
+    "ResetKeysType": "DeletePK"
+}
+
+# Send the POST request
+response = requests.post(reset_keys_uri, json=payload, auth=HTTPBasicAuth(ilo_username, ilo_password), verify=False)
+
+# Check the response
+if response.status_code == 200:
+    print("Platform Key deleted successfully.")
+else:
+    print(f"Failed to delete Platform Key. Status code: {response.status_code}, Response: {response.text}")

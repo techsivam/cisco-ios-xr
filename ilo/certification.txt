@@ -1,0 +1,24 @@
+ilo5_295.bin
+
+Obtain a server firmware or iLO firmware file.
+If you will update the Innovation Engine (IE) or Server Platform Services (SPS) firmware, power off the server, and then wait 30 seconds.
+The IE and SPS firmware cannot be updated when the server OS is running.
+\
+
+Click Firmware & OS Software in the navigation tree, and then click Update Firmware.
+If the Update Firmware option is not displayed, click the ellipsis icon in the top-right corner of the iLO web interface, then click Update Firmware.
+
+Select the Local file 
+Depending on the option you selected, do one of the following:
+Depending on the browser you use, click Browse or Choose File in the Local file box, and then specify the location of the firmware component.
+
+
+On servers with an installed TPM or TM, suspend or back up software that stores information on the TPM or TM, then select the Confirm TPM override check box.
+Drive encryption software is an example of software that stores information on the TPM or TM.
+
+To start the update process, click Flash.
+
+Click OK.
+
+
+https://www.dmtf.org/sites/default/files/standards/documents/DSP2046_2024.4.html

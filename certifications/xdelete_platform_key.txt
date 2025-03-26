@@ -1,0 +1,119 @@
+import requests
+import json
+from getpass import getpass
+
+def get_ilo_session(base_url, username, password):
+    """
+    Create a session with iLO and return session object with auth headers
+    """
+    requests.packages.urllib3.disable_warnings()
+    session = requests.Session()
+    
+    login_payload = {
+        "UserName": username,
+        "Password": password
+    }
+    
+    login_url = f"{base_url}/redfish/v1/SessionService/Sessions/"
+    
+    try:
+        response = session.post(login_url, json=login_payload, verify=False)
+        response.raise_for_status()
+        session.headers.update({"X-Auth-Token": response.headers["X-Auth-Token"]})
+        return session
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to create session: {e}")
+        return None
+
+def get_secure_boot_resource(base_url, session):
+    """
+    Retrieve the SecureBoot resource and return its data
+    """
+    secure_boot_url = f"{base_url}/redfish/v1/Systems/1/SecureBoot/"
+    
+    try:
+        response = session.get(secure_boot_url, verify=False)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error retrieving Secure Boot resource: {e}")
+        if e.response is not None:
+            print(f"Response details: {e.response.text}")
+        return None
+
+def delete_platform_key(base_url, session, secure_boot_data):
+    """
+    Delete the Platform Key (PK) using the ResetKeys action
+    """
+    # Check if Actions and ResetKeys are available
+    if "Actions" not in secure_boot_data or "#SecureBoot.ResetKeys" not in secure_boot_data["Actions"]:
+        print("ResetKeys action not supported on this system.")
+        return False
+    
+    # Get the action URI
+    action_url = secure_boot_data["Actions"]["#SecureBoot.ResetKeys"]["target"]
+    print(f"Found ResetKeys action at: {action_url}")
+    
+    # Check allowable values for ResetKeysType
+    allowable_values = secure_boot_data["Actions"]["#SecureBoot.ResetKeys"].get("ResetKeysType@Redfish.AllowableValues", [])
+    if "DeletePK" not in allowable_values:
+        print(f"DeletePK not supported. Available options: {allowable_values}")
+        return False
+    
+    # Action payload to delete only the PK
+    payload = {
+        "ResetKeysType": "DeletePK"
+    }
+    
+    try:
+        response = session.post(action_url, json=payload, verify=False)
+        response.raise_for_status()
+        
+        print("Platform Key (PK) deletion request successful.")
+        print("System should now be in Setup Mode.")
+        print(f"Response: {response.text}")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"Error executing ResetKeys action: {e}")
+        if e.response is not None:
+            print(f"Response details: {e.response.text}")
+        return False
+
+def main():
+    # iLO server details
+    base_url = input("Enter iLO base URL (e.g., https://ilo-ip): ")
+    username = input("Enter iLO username: ")
+    password = getpass("Enter iLO password: ")
+    
+    # Create session
+    session = get_ilo_session(base_url, username, password)
+    if not session:
+        return
+    
+    # Get Secure Boot resource
+    secure_boot_data = get_secure_boot_resource(base_url, session)
+    if not secure_boot_data:
+        session.close()
+        return
+    
+    # Print current status
+    print("\nSecure Boot Status Before Deletion:")
+    print(f"SecureBootEnable: {secure_boot_data.get('SecureBootEnable', 'N/A')}")
+    print(f"SecureBootCurrentBoot: {secure_boot_data.get('SecureBootCurrentBoot', 'N/A')}")
+    print(f"SecureBootMode: {secure_boot_data.get('SecureBootMode', 'N/A')}")
+    
+    # Attempt to delete Platform Key
+    if delete_platform_key(base_url, session, secure_boot_data):
+        # Check status after deletion
+        updated_secure_boot_data = get_secure_boot_resource(base_url, session)
+        if updated_secure_boot_data:
+            print("\nSecure Boot Status After Deletion:")
+            print(f"SecureBootEnable: {updated_secure_boot_data.get('SecureBootEnable', 'N/A')}")
+            print(f"SecureBootCurrentBoot: {updated_secure_boot_data.get('SecureBootCurrentBoot', 'N/A')}")
+            print(f"SecureBootMode: {updated_secure_boot_data.get('SecureBootMode', 'N/A')}")
+    
+    # Logout
+    session.close()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,13 @@
+# Define the iLO resource URI
+ilo_resource_uri = f"https://{ilo_ip}/redfish/v1/Managers/1/"
+
+# Send the GET request
+response = requests.get(ilo_resource_uri, auth=HTTPBasicAuth(ilo_username, ilo_password), verify=False)
+
+# Check the response
+if response.status_code == 200:
+    ilo_data = response.json()
+    firmware_version = ilo_data.get("FirmwareVersion", "Unknown")
+    print(f"iLO Firmware Version: {firmware_version}")
+else:
+    print(f"Failed to retrieve iLO firmware version. Status code: {response.status_code}")
