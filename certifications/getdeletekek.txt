@@ -1,0 +1,18 @@
+# Define the db certificates collection URI
+db_certificates_uri = f"https://{ilo_ip}/redfish/v1/Systems/1/SecureBoot/SecureBootDatabases/db/Certificates/"
+
+# Send the GET request to retrieve the list of certificates
+response = requests.get(db_certificates_uri, auth=HTTPBasicAuth(ilo_username, ilo_password), verify=False)
+
+if response.status_code == 200:
+    certificates = response.json().get('Members', [])
+    for cert in certificates:
+        cert_uri = cert['@odata.id']
+        # Send DELETE request for each certificate
+        delete_response = requests.delete(f"https://{ilo_ip}{cert_uri}", auth=HTTPBasicAuth(ilo_username, ilo_password), verify=False)
+        if delete_response.status_code == 200:
+            print(f"Successfully deleted certificate at {cert_uri}")
+        else:
+            print(f"Failed to delete certificate at {cert_uri}. Status code: {delete_response.status_code}, Response: {delete_response.text}")
+else:
+    print(f"Failed to retrieve db certificates. Status code: {response.status_code}, Response: {response.text}")

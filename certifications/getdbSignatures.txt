@@ -1,0 +1,18 @@
+# Define the db signatures collection URI
+db_signatures_uri = f"https://{ilo_ip}/redfish/v1/Systems/1/SecureBoot/SecureBootDatabases/db/Signatures/"
+
+# Send the GET request to retrieve the list of signatures
+response = requests.get(db_signatures_uri, auth=HTTPBasicAuth(ilo_username, ilo_password), verify=False)
+
+if response.status_code == 200:
+    signatures = response.json().get('Members', [])
+    for sig in signatures:
+        sig_uri = sig['@odata.id']
+        # Send DELETE request for each signature
+        delete_response = requests.delete(f"https://{ilo_ip}{sig_uri}", auth=HTTPBasicAuth(ilo_username, ilo_password), verify=False)
+        if delete_response.status_code == 200:
+            print(f"Successfully deleted signature at {sig_uri}")
+        else:
+            print(f"Failed to delete signature at {sig_uri}. Status code: {delete_response.status_code}, Response: {delete_response.text}")
+else:
+    print(f"Failed to retrieve db signatures. Status code: {response.status_code}, Response: {response.text}")

@@ -1,0 +1,37 @@
+ilorest login 192.168.1.100 -u admin -p mypassword
+ilorest select HpeiLOSecureBoot
+ilorest certificate delete --type PK
+ilorest certificate delete --type KEK
+ilorest certificate delete --type DB
+ilorest commit
+ilorest logout
+
+
+
+#!/bin/bash
+ILO_IP="192.168.1.100"
+USERNAME="admin"
+PASSWORD="mypassword"
+
+# Log in to iLO
+ilorest login $ILO_IP -u $USERNAME -p $PASSWORD
+
+# Select Secure Boot resource
+ilorest select HpeiLOSecureBoot
+
+# List current keys to identify slots (optional for verification)
+ilorest certificate --list
+
+# Delete PK, KEK, and DB keys (adjust slots if needed)
+ilorest certificate delete --type PK
+ilorest certificate delete --type KEK
+ilorest certificate delete --type DB
+
+# Commit changes
+ilorest commit
+
+# Reset iLO (optional, may be required)
+ilorest iloreset
+
+# Log out
+ilorest logout
