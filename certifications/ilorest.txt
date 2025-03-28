@@ -130,3 +130,48 @@ The iLO 5 RESTful API Reference (certificate and Secure Boot endpoints).
 The iLO RESTful Interface Tool User Guide (certificate management commands).
 Practical alignment with Redfish standards and iLO 5’s firmware capabilities.
 If you need exact page numbers or verbatim quotes, you’d need to download the PDFs from HPE’s support site and search for "Secure Boot" or "certificate delete." Let me know if you’d like help finding a specific document or verifying this further!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ilorest login <iLO_IP> --user <username> --password <password>
+
+
+
+
+# Step 1: Login to iLO
+ilorest login <iLO_IP> -u <username> -p <password>
+
+# Step 2: Verify Secure Boot Configuration
+ilorest rawget "/redfish/v1/SecureBoot/"
+
+# Step 3: Delete Secure Boot Keys
+ilorest rawpatch "/redfish/v1/SecureBoot/" -j '{"PlatformKey": null}'
+ilorest rawpatch "/redfish/v1/SecureBoot/" -j '{"KeyExchangeKeys": null}'
+ilorest rawpatch "/redfish/v1/SecureBoot/" -j '{"AuthorizedSignatures": null}'
+ilorest rawpatch "/redfish/v1/SecureBoot/" -j '{"ForbiddenSignatures": null}'  # Optional
+
+# Step 4: Verify Deletion
+ilorest rawget "/redfish/v1/SecureBoot/"
+
+# Step 5: Log out
+ilorest logout
+
+# Step 6: Reboot the server (iLO reset is NOT enough)
+
+
+
+
+
+ilorest rawpatch "/redfish/v1/SecureBoot/" -j '{"PlatformKey": null}'
+
